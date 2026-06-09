@@ -1,0 +1,36 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: techcelerators-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: techcelerators_lms
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./backend/database/seeds.sql:/docker-entrypoint-initdb.d/02-seeds.sql:ro
+
+  backend:
+    build:
+      context: ./backend
+    container_name: techcelerators-backend
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    env_file:
+      - ./backend/.env.example
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: rootpassword
+      DB_NAME: techcelerators_lms
+      PORT: 5000
+    ports:
+      - '5000:5000'
+
+volumes:
+  mysql_data:
